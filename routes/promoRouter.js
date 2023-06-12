@@ -1,6 +1,8 @@
 // Name: Chromilo Amin | chromiloamin@gmail.com
 // Date: May 31, 2023
-// Description: Assignment 2: MongoDB
+// Description: Assignment 3: MongoDB
+
+var authenticate = require('../authenticate');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -24,7 +26,7 @@ promoRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post((req,res,next)=> {
+.post(authenticate.verifyUser, (req,res,next)=> {
     Promotions.create(req.body)
     .then((promotion) => {
         console.log('Promotion Created ', promotion);
@@ -32,11 +34,11 @@ promoRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.put((req,res,next)=> {
+.put(authenticate.verifyUser, (req,res,next)=> {
     res.statusCode = 403;
     res.end('PUT operation not supported on /promotions');
 })
-.delete((req,res,next)=> {
+.delete(authenticate.verifyUser, (req,res,next)=> {
     Promotions.remove({})
     .then((resp) => {
         res.json(resp);
@@ -54,11 +56,11 @@ promoRouter.route('/:promoId')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post((req,res,next)=> {
+.post(authenticate.verifyUser, (req,res,next)=> {
     res.statusCode = 403;
     res.end('POST operation not supported on /promotions/' + req.params.promoId);
 })
-.put((req,res,next)=> {
+.put(authenticate.verifyUser, (req,res,next)=> {
     res.write('Updating the promotion: ' + req.params.promoId + ' ');
     res.end('Will update the promotion: ' + req.body.name + ' with details: ' + req.body.description)
     Promotions.findByIdAndUpdate(req.params.promoId, {
@@ -71,7 +73,7 @@ promoRouter.route('/:promoId')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.delete((req,res,next)=> {
+.delete(authenticate.verifyUser, (req,res,next)=> {
     Promotions.findByIdAndRemove(req.params.promoId)
     .then((resp) => {
         res.statusCode = 200;
