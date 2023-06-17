@@ -7,6 +7,7 @@ var authenticate = require('../authenticate');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const cors = require('./cors');
 
 const Dishes = require('../models/dishes');
 
@@ -14,8 +15,10 @@ const dishRouter = express.Router();
 
 dishRouter.use(bodyParser.json());
 
+
 dishRouter.route('/')
-.get(authenticate.verifyUser, (req,res,next) => {  // Task 2: Any logged in user can GET
+.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+.get(cors.cors, (req,res,next) => {  // Task 2: Any logged in user can GET
     Dishes.find({})
     .populate('comments.author')
     .then((dishes) => {
@@ -25,7 +28,7 @@ dishRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can POST
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can POST
     Dishes.create(req.body)
     .then((dish) => {
         console.log('Dish Created ', dish);
@@ -35,11 +38,11 @@ dishRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can PUT
+.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can PUT
     res.statusCode = 403;
     res.end('PUT operation not supported on /dishes');
 })
-.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can DELETE
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => { // Task 2: Only admin can DELETE
     Dishes.remove({})
     .then((resp) => {
         res.statusCode = 200;
@@ -50,7 +53,8 @@ dishRouter.route('/')
 });
 
 dishRouter.route('/:dishId')
-.get(authenticate.verifyUser,(req,res,next) => {  // Task 2: Any logged in user can GET
+.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+.get(cors.cors, (req,res,next) => {  // Task 2: Any logged in user can GET
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
@@ -60,11 +64,11 @@ dishRouter.route('/:dishId')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can POST
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can POST
     res.statusCode = 403;
     res.end('POST operation not supported on /dishes/'+ req.params.dishId);
 })
-.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can PUT
+.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can PUT
     Dishes.findByIdAndUpdate(req.params.dishId, {
         $set: req.body
     }, { new: true })
@@ -75,7 +79,7 @@ dishRouter.route('/:dishId')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can DELETE
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can DELETE
     Dishes.findByIdAndRemove(req.params.dishId)
     .then((resp) => {
         res.statusCode = 200;
@@ -86,7 +90,8 @@ dishRouter.route('/:dishId')
 });
 
 dishRouter.route('/:dishId/comments')
-.get((req,res,next) => {  // Task 2: Anyone can GET comments
+.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+.get(cors.cors, (req,res,next) => {  // Task 2: Anyone can GET comments
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
@@ -103,7 +108,7 @@ dishRouter.route('/:dishId/comments')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {  // Task 2: Anyone can POST comments but must be logged in
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Anyone can POST comments but must be logged in
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null) {
@@ -129,12 +134,12 @@ dishRouter.route('/:dishId/comments')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.put((req, res, next) => {  // Task 2: Anyone can PUT comments
+.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Anyone can PUT comments
     res.statusCode = 403;
     res.end('PUT operation not supported on /dishes/'
         + req.params.dishId + '/comments');
 })
-.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can DELETE
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 2: Only admin can DELETE
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null) {
@@ -158,7 +163,8 @@ dishRouter.route('/:dishId/comments')
 });
 
 dishRouter.route('/:dishId/comments/:commentId')
-.get((req, res, next) => {  // Task 4: Anyone can GET comment ID
+.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+.get(cors.cors, (req,res,next) => {  // Task 4: Anyone can GET comment ID
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
@@ -180,12 +186,12 @@ dishRouter.route('/:dishId/comments/:commentId')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end('POST operation not supported on /dishes/'+ req.params.dishId
         + '/comments/' + req.params.commentId);
 })
-.put(authenticate.verifyUser, (req, res, next) => {  // Task 4: Must be a valid user
+.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {  // Task 4: Must be a valid user
     Dishes.findById(req.params.dishId)
     .populate('comments.author')   // Task 4: Expand author ID
     .then((dish) => {
@@ -221,7 +227,7 @@ dishRouter.route('/:dishId/comments/:commentId')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.delete(authenticate.verifyUser, (req, res, next) => {   // Task 4: Must be a valid user
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {   // Task 4: Must be a valid user
     Dishes.findById(req.params.dishId)
     .populate('comments.author')  // Task 4: Expand author ID
     .then((dish) => {
