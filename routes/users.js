@@ -1,3 +1,7 @@
+// Name: Chromilo Amin | chromiloamin@gmail.com
+// Date: Jun 12, 2023
+// Description: Assignment 3: User Authentication
+
 var express = require('express');
 var router = express.Router();
 
@@ -10,8 +14,15 @@ var authenticate = require('../authenticate');
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.route('/')
+.get(authenticate.verifyUser, authenticate.verifyAdmin,(req,res,next) => {  // Task 3: authenticate.verifyUser, authenticate.verifyAdmin will ensure only admin can do this
+    User.find({})
+    .then((user) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(user);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 });
 
 router.post('/signup', (req, res, next) => {
@@ -27,6 +38,8 @@ router.post('/signup', (req, res, next) => {
         user.firstname = req.body.firstname;
       if (req.body.lastname)
         user.lastname = req.body.lastname;
+      if (req.body.admin)
+        user.admin = req.body.admin;
       user.save((err, user) => {
         if (err) {
           res.statusCode = 500;

@@ -1,3 +1,7 @@
+// Name: Chromilo Amin | chromiloamin@gmail.com
+// Date: Jun 12, 2023
+// Description: Assignment 3: User Authentication
+
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var User = require('./models/user');
@@ -33,7 +37,16 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
         });
     }));
 
-exports.verifyUser = passport.authenticate('jwt', {session: false});
+exports.verifyUser = passport.authenticate('jwt', {session: false});  // Task 1: same as verifyOrdinaryUser
+exports.verifyAdmin = function(req, res, next) {
+    if (req.user.admin) {   // Task 1: req.user.admin is a boolean
+        next(); // authorized
+    } else {
+        var err = new Error('You are not authorized to perform this operation');
+        err.status = 403;
+        next(err);
+    }
+};
 
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
